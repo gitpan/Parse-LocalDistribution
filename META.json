@@ -4,7 +4,7 @@
       "Kenichi Ishigaki <ishigaki@cpan.org>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.130880",
+   "generated_by" : "ExtUtils::MakeMaker version 6.66, CPAN::Meta::Converter version 2.131560",
    "license" : [
       "perl_5"
    ],
@@ -46,5 +46,5 @@
          "url" : "https://github.com/charsbar/Parse-LocalDistribution"
       }
    },
-   "version" : "0.01"
+   "version" : "0.02"
 }

@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 sub new {
   my ($class, $root) = @_;
@@ -136,7 +136,7 @@ sub _examine_pms {
       }
       # going from a distro object to a package object
       # is only possible via a file object
-      my $info = $parser->parse($v->{infile});
+      my $info = $parser->parse(File::Spec->catfile($self->{DISTROOT}, $v->{infile}));
 
       $result{$_} = $info->{$_} for keys %$info;
     }

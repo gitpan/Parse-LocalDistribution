@@ -1,4 +1,7 @@
 Revision history for Parse-LocalDistribution
 
+0.02 2013/08/25
+  - corrected infile path in meta provides
+
 0.01 2013/06/15
   - initial release
