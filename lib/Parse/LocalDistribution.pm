@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 sub new {
   my ($class, $root) = @_;
@@ -55,6 +55,12 @@ sub _extract_meta {
              grep !m|/t/|, grep m|/META\.json$|, @manifind;
   my $yaml = List::Util::reduce { length $a < length $b ? $a : $b }
              grep !m|/t/|, grep m|/META\.yml$|, @manifind;
+
+  # META.json located only in a subdirectory should not precede
+  # META.yml located in the top directory. (eg. Test::Module::Used 0.2.4)
+  if ($json && $yaml && length($json) > length($yaml) + 1) {
+    $json = '';
+  }
 
   unless ($json || $yaml) {
     $self->{METAFILE} = "No META.yml or META.json found";
@@ -160,7 +166,8 @@ sub _filter_pms {
     # skip "inc" - libraries in ./inc are usually install libraries
     # skip "local" - somebody shipped his carton setup!
     # skip 'perl5" - somebody shipped her local::lib!
-    next if $inmf =~ m!^(?:x?t|inc|local|perl5)/!;
+    # skip 'fatlib" - somebody shipped their  fatpack lib!
+    next if $inmf =~ m!^(?:x?t|inc|local|perl5|fatlib)/!;
 
     if ($self->{META_CONTENT}){
       my $no_index = $self->{META_CONTENT}{no_index}
