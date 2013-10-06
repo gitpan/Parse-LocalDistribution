@@ -25,4 +25,4 @@ requires:
   Parse::PMFile: 0.03
 resources:
   repository: https://github.com/charsbar/Parse-LocalDistribution
-version: 0.03
+version: 0.04

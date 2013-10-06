@@ -1,5 +1,8 @@
 Revision history for Parse-LocalDistribution
 
+0.04 2013/10/06
+  - ignore broken provides field
+
 0.03 2013/09/26
   - ignore fatlib (MIYAGAWA++)
   - META.json in a subdir should not precede META.yml in the topdir.

@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 sub new {
   my ($class, $root) = @_;
@@ -127,6 +127,7 @@ sub _examine_pms {
     }
   } elsif (2==$indexingrule) { # a yaml with provides
     while (my($k,$v) = each %$provides) {
+      next if ref $v ne ref {};
       $v->{infile} = "$v->{file}";
       my @stat = stat File::Spec->catfile($self->{DISTROOT}, $v->{file});
       if (@stat) {
