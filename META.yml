@@ -22,7 +22,7 @@ no_index:
 requires:
   List::Util: 0
   Parse::CPAN::Meta: 0
-  Parse::PMFile: 0.03
+  Parse::PMFile: 0.09
 resources:
   repository: https://github.com/charsbar/Parse-LocalDistribution
-version: 0.04
+version: 0.05

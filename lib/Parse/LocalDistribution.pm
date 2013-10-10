@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 sub new {
   my ($class, $root) = @_;
@@ -121,9 +121,16 @@ sub _examine_pms {
         next;
       }
 
-      my $info = $parser->parse($pmfile_abs);
+      my ($info, $errs) = $parser->parse($pmfile_abs);
 
       $result{$_} = $info->{$_} for keys %$info;
+      if ($errs) {
+        for my $package (keys %$errs) {
+          for (keys %{$errs->{$package}}) {
+            $result{$package}{$_.'_error'} = $errs->{$package}{$_};
+          }
+        }
+      }
     }
   } elsif (2==$indexingrule) { # a yaml with provides
     while (my($k,$v) = each %$provides) {
@@ -143,9 +150,16 @@ sub _examine_pms {
       }
       # going from a distro object to a package object
       # is only possible via a file object
-      my $info = $parser->parse(File::Spec->catfile($self->{DISTROOT}, $v->{infile}));
+      my ($info, $errs) = $parser->parse(File::Spec->catfile($self->{DISTROOT}, $v->{infile}));
 
       $result{$_} = $info->{$_} for keys %$info;
+      if ($errs) {
+        for my $package (keys %$errs) {
+          for (keys %{$errs->{$package}}) {
+            $result{$package}{$_.'_error'} = $errs->{$package}{$_};
+          }
+        }
+      }
     }
   }
 

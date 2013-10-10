@@ -11,7 +11,7 @@ my %params = (
     PREREQ_PM     => {
         'List::Util' => 0,
         'Parse::CPAN::Meta' => '0',
-        'Parse::PMFile' => '0.03',
+        'Parse::PMFile' => '0.09', # for error info
     },
     BUILD_REQUIRES => {
         'File::Path' => 0,
@@ -25,7 +25,7 @@ my %params = (
     },
 );
 
-my $eumm = $ExtUtils::MakeMaker::VERSION;
+my $eumm = eval $ExtUtils::MakeMaker::VERSION;
 delete $params{LICENSE}          if $eumm < 6.31;
 delete $params{META_MERGE}       if $eumm < 6.46;
 

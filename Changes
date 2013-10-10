@@ -1,5 +1,8 @@
 Revision history for Parse-LocalDistribution
 
+0.05 2013/10/10
+  - include invalid version info
+
 0.04 2013/10/06
   - ignore broken provides field
 
