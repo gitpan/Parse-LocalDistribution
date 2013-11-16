@@ -1,5 +1,9 @@
 Revision history for Parse-LocalDistribution
 
+0.06 2013/11/17
+  - ignore 'provides' entries whose file field is empty
+  - keep error infile as infile, not as infile_error
+
 0.05 2013/10/10
   - include invalid version info
 

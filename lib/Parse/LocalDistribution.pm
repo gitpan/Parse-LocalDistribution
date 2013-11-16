@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 sub new {
   my ($class, $root) = @_;
@@ -95,7 +95,8 @@ sub _examine_pms {
   my $dist = $self->{DIST};
 
   my $pmfiles = $self->_filter_pms;
-  my($meta,$provides,$indexingrule);
+  my($meta,$provides);
+  my $indexingrule = 0;
   if (my $version_from_meta_ok = $self->_version_from_meta_ok) {
     $meta = $self->{META_CONTENT};
     $provides = $meta->{provides};
@@ -127,7 +128,7 @@ sub _examine_pms {
       if ($errs) {
         for my $package (keys %$errs) {
           for (keys %{$errs->{$package}}) {
-            $result{$package}{$_.'_error'} = $errs->{$package}{$_};
+            $result{$package}{$_ eq 'infile' ? $_ : $_.'_error'} = $errs->{$package}{$_};
           }
         }
       }
@@ -135,6 +136,7 @@ sub _examine_pms {
   } elsif (2==$indexingrule) { # a yaml with provides
     while (my($k,$v) = each %$provides) {
       next if ref $v ne ref {};
+      next if !defined $v->{file} or $v->{file} eq '';
       $v->{infile} = "$v->{file}";
       my @stat = stat File::Spec->catfile($self->{DISTROOT}, $v->{file});
       if (@stat) {
@@ -156,7 +158,7 @@ sub _examine_pms {
       if ($errs) {
         for my $package (keys %$errs) {
           for (keys %{$errs->{$package}}) {
-            $result{$package}{$_.'_error'} = $errs->{$package}{$_};
+            $result{$package}{$_ eq 'infile' ? $_ : $_.'_error'} = $errs->{$package}{$_};
           }
         }
       }
