@@ -1,5 +1,8 @@
 Revision history for Parse-LocalDistribution
 
+0.07 2014/02/19
+  - respect meta provides correctly
+
 0.06 2013/11/17
   - ignore 'provides' entries whose file field is empty
   - keep error infile as infile, not as infile_error

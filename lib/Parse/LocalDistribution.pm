@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 sub new {
   my ($class, $root) = @_;
@@ -152,20 +152,55 @@ sub _examine_pms {
       }
       # going from a distro object to a package object
       # is only possible via a file object
-      my ($info, $errs) = $parser->parse(File::Spec->catfile($self->{DISTROOT}, $v->{infile}));
 
-      $result{$_} = $info->{$_} for keys %$info;
-      if ($errs) {
-        for my $package (keys %$errs) {
-          for (keys %{$errs->{$package}}) {
-            $result{$package}{$_ eq 'infile' ? $_ : $_.'_error'} = $errs->{$package}{$_};
-          }
-        }
-      }
+      $self->_examine_pkg({package => $k, pp => $v}) or next;
+
+      $result{$k} = $v;
     }
   }
 
   return \%result;
+}
+
+# from PAUSE::package;
+sub _examine_pkg {
+  my ($self, $args) = @_;
+  my $package = $args->{package};
+  my $pp = $args->{pp};
+
+  # should they be cought earlier? Maybe.
+  # but as an ultimate sanity check suggested by Richard Soderberg
+  # XXX should be in a separate sub and be tested
+  if ($package !~ /^\w[\w\:\']*\w?\z/
+      ||
+      $package !~ /\w\z/
+      ||
+      $package =~ /:/ && $package !~ /::/
+      ||
+      $package =~ /\w:\w/
+      ||
+      $package =~ /:::/
+      ){
+      $self->_verbose(1,"Package[$package] did not pass the ultimate sanity check");
+      return;
+  }
+
+  # Can't do perm_check() here.
+
+  # No parser problem should be found
+  # (only used for META provides in this module)
+
+  # Sanity checks
+
+  for (
+        $package,
+        $pp->{version},
+      ) {
+      if (!defined || /^\s*$/ || /\s/){  # for whatever reason I come here
+          return;            # don't screw up 02packages
+      }
+  }
+  $pp;
 }
 
 # from PAUSE::dist;
