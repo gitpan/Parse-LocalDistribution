@@ -7,6 +7,8 @@ t/00_load.t
 t/10_self_check.t
 t/20_dist_not_in_the_current.t
 t/30_no_index.t
+t/40_manifest.t
+t/41_manifest_skip.t
 xt/99_pod.t
 xt/99_podcoverage.t
 META.yml                                 Module YAML meta-data (added by MakeMaker)

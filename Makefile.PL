@@ -11,7 +11,7 @@ my %params = (
     PREREQ_PM     => {
         'List::Util' => 0,
         'Parse::CPAN::Meta' => '0',
-        'Parse::PMFile' => '0.09', # for error info
+        'Parse::PMFile' => '0.15', # for package/namespace no_index
     },
     BUILD_REQUIRES => {
         'File::Path' => 0,

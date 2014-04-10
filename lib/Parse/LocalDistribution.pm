@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 sub new {
   my ($class, $root) = @_;
@@ -270,10 +270,18 @@ sub _verbose { Parse::PMFile::_verbose(@_) }
 
 # instead of ExtUtils::Manifest::manifind()
 # which only looks for files under the current directory.
+# We also need to look at MANIFEST/MANIFEST.SKIP here because
+# unwanted files are not excluded yet.
+# If we have MANIFEST, assume it's up-to-date and lists everything
+# we need. If we have only MANIFEST.SKIP, then look for files
+# and discard the matched.
 sub _find_files {
   my $self = shift;
 
-  my @files;
+  my @files = $self->_find_files_from_manifest;
+  return sort @files if @files;
+
+  my $skip = $self->_prepare_skip;
 
   my $root = $self->{DISTROOT};
   my $wanted = sub {
@@ -282,6 +290,7 @@ sub _find_files {
     return if $name =~ m!/(?:\.(?:svn|git)|blib)/!; # too common
     my $rel = File::Spec->abs2rel($name, $root);
     $rel =~ s|\\|/|g;
+    return if $skip && $skip->($rel);
     push @files, "./$rel";
   };
 
@@ -290,6 +299,58 @@ sub _find_files {
   );
 
   return sort @files;
+}
+
+# adapted from ExtUtils::Manifest::maniread
+sub _find_files_from_manifest {
+  my $self = shift;
+  my $root = $self->{DISTROOT};
+  my $manifile = "$root/MANIFEST";
+  return unless -f $manifile;
+
+  my %files;
+  open my $fh, '<', $manifile or return;
+  while(<$fh>) {
+    next if /^\s*#/;
+    chomp;
+    my ($file, $comment);
+    if (($file, $comment) = /^'(\\[\\']|.+)+'\s*(.*)/) {
+      $file =~ s/\\([\\'])/$1/g;
+    }
+    else {
+      ($file, $comment) = /^(\S+)\s*(.*)/;
+    }
+    next unless $file;
+    $files{"./$file"} = $comment;
+  }
+  sort keys %files;
+}
+
+# adapted from ExtUtils::Manifest::maniskip
+sub _prepare_skip {
+  my $self = shift;
+  my $root = $self->{DISTROOT};
+  my $skipfile = "$root/MANIFEST.SKIP";
+  return unless -f $skipfile;
+
+  my @skip;
+  open my $fh, '<', $skipfile or return;
+  while(<$fh>) {
+    chomp;
+    s/\r//;
+    m{^\s*(?:(?:'([^\\']*(?:\\.[^\\']*)*)')|([^#\s]\S*))?(?:(?:\s*)|(?:\s+(.*?)\s*))$};
+    my $filename = $2;
+    if ( defined($1) ) { 
+      $filename = $1; 
+      $filename =~ s/\\(['\\])/$1/g;
+    }
+    next if not defined($filename) or not $filename;
+    push @skip, $filename;
+  }
+  return unless @skip;
+  my $re = join '|', map "(?:$_)", @skip;
+
+  return sub {$_[0] =~ /$re/};
 }
 
 1;
