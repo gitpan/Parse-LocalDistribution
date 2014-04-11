@@ -1,5 +1,10 @@
 Revision history for Parse-LocalDistribution
 
+0.09 2014/04/11
+  - reflected the changes done in PAUSE at QAH 2014
+  - not to add _error to indexing_warning (introduced in
+    Parse::PMFile 0.16)
+
 0.08 2014/04/11
   - respect MANIFEST/MANIFEST.SKIP correctly (Tux++)
 

@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 sub new {
   my ($class, $root) = @_;
@@ -95,70 +95,85 @@ sub _examine_pms {
   my $dist = $self->{DIST};
 
   my $pmfiles = $self->_filter_pms;
-  my($meta,$provides);
-  my $indexingrule = 0;
+  my($meta, $provides, $indexing_method);
   if (my $version_from_meta_ok = $self->_version_from_meta_ok) {
     $meta = $self->{META_CONTENT};
     $provides = $meta->{provides};
-    if (!$indexingrule && $provides && "HASH" eq ref $provides) {
-      $indexingrule = 2;
+    if ($provides && "HASH" eq ref $provides) {
+      $indexing_method = '_index_by_meta';
     }
   }
-  if (!$indexingrule && @$pmfiles) { # examine files
-    $indexingrule = 1;
+  if (! $indexing_method && @$pmfiles) { # examine files
+    $indexing_method = '_index_by_files';
   }
+
+  if ($indexing_method) {
+    return $self->$indexing_method($pmfiles, $provides);
+  }
+  return {};
+}
+
+# from PAUSE::dist
+sub _index_by_files {
+  my ($self, $pmfiles, $provides) = @_;
+  my $dist = $self->{DIST};
 
   my %result;
   my $parser = Parse::PMFile->new($self->{META_CONTENT});
-  if (0) {
-  } elsif (1==$indexingrule) { # examine files
-    for my $pmfile (@$pmfiles) {
-      my $pmfile_abs = File::Spec->catfile($self->{DISTROOT}, $pmfile);
-      $pmfile_abs =~ s|\\|/|g;
-      if ($pmfile_abs =~ m|/blib/|) {
-        $self->_verbose("Still a blib directory detected:
-          dist[$dist]pmfile[$pmfile]
-          ");
-        next;
-      }
+  for my $pmfile (@$pmfiles) {
+    my $pmfile_abs = File::Spec->catfile($self->{DISTROOT}, $pmfile);
+    $pmfile_abs =~ s|\\|/|g;
+    if ($pmfile_abs =~ m|/blib/|) {
+      $self->_verbose("Still a blib directory detected:
+        dist[$dist]pmfile[$pmfile]
+        ");
+      next;
+    }
 
-      my ($info, $errs) = $parser->parse($pmfile_abs);
+    my ($info, $errs) = $parser->parse($pmfile_abs);
 
-      $result{$_} = $info->{$_} for keys %$info;
-      if ($errs) {
-        for my $package (keys %$errs) {
-          for (keys %{$errs->{$package}}) {
-            $result{$package}{$_ eq 'infile' ? $_ : $_.'_error'} = $errs->{$package}{$_};
-          }
+    $result{$_} = $info->{$_} for keys %$info;
+    if ($errs) {
+      for my $package (keys %$errs) {
+        for (keys %{$errs->{$package}}) {
+          $result{$package}{$_ =~ /infile|warning/ ? $_ : $_.'_error'} = $errs->{$package}{$_};
         }
       }
     }
-  } elsif (2==$indexingrule) { # a yaml with provides
-    while (my($k,$v) = each %$provides) {
-      next if ref $v ne ref {};
-      next if !defined $v->{file} or $v->{file} eq '';
-      $v->{infile} = "$v->{file}";
-      my @stat = stat File::Spec->catfile($self->{DISTROOT}, $v->{file});
-      if (@stat) {
-        $v->{filemtime} = $stat[9];
-      } else {
-        $v->{filemtime} = 0;
-      }
-      unless (defined $v->{version}) {
-        # 2009-09-23 get a bugreport due to
-        # RKITOVER/MooseX-Types-0.20.tar.gz not
-        # setting version for MooseX::Types::Util
-        $v->{version} = "undef";
-      }
-      # going from a distro object to a package object
-      # is only possible via a file object
-
-      $self->_examine_pkg({package => $k, pp => $v}) or next;
-
-      $result{$k} = $v;
-    }
   }
+  return \%result;
+}
 
+# from PAUSE::dist
+sub _index_by_meta {
+  my ($self, $pmfiles, $provides) = @_;
+  my $dist = $self->{DIST};
+
+  my %result;
+  my $parser = Parse::PMFile->new($self->{META_CONTENT});
+  while (my($k,$v) = each %$provides) {
+    next if ref $v ne ref {};
+    next if !defined $v->{file} or $v->{file} eq '';
+    $v->{infile} = "$v->{file}";
+    my @stat = stat File::Spec->catfile($self->{DISTROOT}, $v->{file});
+    if (@stat) {
+      $v->{filemtime} = $stat[9];
+    } else {
+      $v->{filemtime} = 0;
+    }
+    unless (defined $v->{version}) {
+      # 2009-09-23 get a bugreport due to
+      # RKITOVER/MooseX-Types-0.20.tar.gz not
+      # setting version for MooseX::Types::Util
+      $v->{version} = "undef";
+    }
+    # going from a distro object to a package object
+    # is only possible via a file object
+
+    $self->_examine_pkg({package => $k, pp => $v}) or next;
+
+    $result{$k} = $v;
+  }
   return \%result;
 }
 
