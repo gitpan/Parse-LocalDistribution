@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 sub new {
   my ($class, $root) = @_;
@@ -124,7 +124,7 @@ sub _index_by_files {
     my $pmfile_abs = File::Spec->catfile($self->{DISTROOT}, $pmfile);
     $pmfile_abs =~ s|\\|/|g;
     if ($pmfile_abs =~ m|/blib/|) {
-      $self->_verbose("Still a blib directory detected:
+      $self->_verbose(1,"Still a blib directory detected:
         dist[$dist]pmfile[$pmfile]
         ");
       next;
