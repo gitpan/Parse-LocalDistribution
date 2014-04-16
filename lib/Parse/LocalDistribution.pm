@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 sub new {
   my ($class, $root) = @_;
@@ -132,7 +132,11 @@ sub _index_by_files {
 
     my ($info, $errs) = $parser->parse($pmfile_abs);
 
-    $result{$_} = $info->{$_} for keys %$info;
+    for my $package (keys %$info) {
+      if (!defined $result{$package} or $info->{$package}{simile}) {
+        $result{$package} = $info->{$package};
+      }
+    }
     if ($errs) {
       for my $package (keys %$errs) {
         for (keys %{$errs->{$package}}) {

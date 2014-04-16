@@ -1,5 +1,10 @@
 Revision history for Parse-LocalDistribution
 
+0.11 2014/04/16
+  - fixed a case when there are simile and non-simile packages
+    in the same distribution (such as Text::Xslate), reported by
+    tokuhirom++
+
 0.10 2014/04/15
   - fixed a wrong usage of internal method (_verbose)
 
