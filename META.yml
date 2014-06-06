@@ -9,7 +9,7 @@ build_requires:
 configure_requires:
   ExtUtils::MakeMaker: '0'
 dynamic_config: 1
-generated_by: 'ExtUtils::MakeMaker version 6.76, CPAN::Meta::Converter version 2.140640'
+generated_by: 'ExtUtils::MakeMaker version 6.98, CPAN::Meta::Converter version 2.141170'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -25,4 +25,4 @@ requires:
   Parse::PMFile: '0.15'
 resources:
   repository: https://github.com/charsbar/Parse-LocalDistribution
-version: '0.11'
+version: '0.12'

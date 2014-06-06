@@ -3,14 +3,17 @@ use warnings;
 use FindBin;
 use Test::More;
 use File::Path;
+use File::Temp qw/tempdir/;
 use Parse::LocalDistribution;
 
 my $pid = $$;
-my $dir = "$FindBin::Bin/fake";
+my $dir;
 eval {
-  unless (-d $dir) {
-    mkdir $dir or die "failed to create a temporary directory: $!";
-    mkdir "$dir/lib" or die "failed to create a temporary directory: $!";
+  $dir = tempdir();
+  for ($dir, "$dir/lib") {
+    unless (-d $_) {
+      mkpath $_ or die "failed to create a temporary directory: $_ $!";
+    }
   }
   {
     open my $fh, '>', "$dir/lib/ParseLocalDistTest.pm" or die "failed to open a temp file: $!";
@@ -22,15 +25,18 @@ eval {
 };
 plan skip_all => $@ if $@;
 
-plan tests => 1;
+plan tests => 1 * 2;
 
-my $p = Parse::LocalDistribution->new;
-my $provides = $p->parse($dir);
-ok $provides && $provides->{ParseLocalDistTest}{version} eq '0.01', "correct version";
-note explain $provides;
+for my $fork (0..1) {
+  local $Parse::PMFile::FORK = $fork;
+  my $p = Parse::LocalDistribution->new;
+  my $provides = $p->parse($dir);
+  ok $provides && $provides->{ParseLocalDistTest}{version} eq '0.01', "correct version";
+  note explain $provides;
+}
 
 END {
-  if (-d $dir && $pid eq $$) {
+  if ($dir && -d $dir && $pid eq $$) {
     rmtree $dir;
   }
 }

@@ -1,5 +1,9 @@
 Revision history for Parse-LocalDistribution
 
+0.12 2014/06/06
+  - no code change
+  - made sure to use different directories while testing
+
 0.11 2014/04/16
   - fixed a case when there are simile and non-simile packages
     in the same distribution (such as Text::Xslate), reported by
