@@ -1,5 +1,9 @@
 Revision history for Parse-LocalDistribution
 
+0.13 2014/08/22
+  - convert (illegal) back slashes in no_index entries to
+    forward slashes to suppress warnings
+
 0.12 2014/06/06
   - no code change
   - made sure to use different directories while testing

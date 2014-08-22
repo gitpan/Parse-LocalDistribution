@@ -9,7 +9,7 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 sub new {
   my ($class, $root) = @_;
@@ -253,6 +253,7 @@ sub _filter_pms {
           my $rest = $map{$k};
           if (ref $v eq "ARRAY") {
             for my $ve (@$v) {
+              $ve =~ s|\\|/|g; # Class-InsideOut-0.90_01
               $ve =~ s|/+$||;
               if ($inmf =~ /^$ve$rest/){
                 $self->_verbose(1,"Skipping inmf[$inmf] due to ve[$ve]");
