@@ -38,17 +38,16 @@ eval {
 };
 plan skip_all => $@ if $@;
 
-plan tests => 2 * 2;
-
 for my $fork (0..1) {
-  local $Parse::PMFile::FORK = $fork;
-  my $p = Parse::LocalDistribution->new;
+  my $p = Parse::LocalDistribution->new({FORK => $fork});
   my $provides = $p->parse($dir);
   ok $provides && $provides->{ParseLocalDistTest}{version} eq '0.01', "correct version";
   ok $provides && !$provides->{ParseLocalDistTest2}, "ParseLocalDistTest2 is ignored";
   note explain $provides;
   note explain $p;
 }
+
+done_testing;
 
 END {
   if ($dir && -d $dir && $pid eq $$) {

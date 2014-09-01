@@ -9,12 +9,15 @@ use File::Spec;
 use File::Find;
 use Cwd ();
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 sub new {
-  my ($class, $root) = @_;
+  my ($class, $root, $opts) = @_;
+  if (ref $root eq ref {} && !$opts) {
+    $opts = $root; $root = undef;
+  }
   $root ||= Cwd::cwd();
-  bless {DISTROOT => $root, DIST => $root}, $class;
+  bless {%{ $opts|| {} }, DISTROOT => $root, DIST => $root}, $class;
 }
 
 # adapted from PAUSE::mldistwatch#check_for_new
@@ -119,7 +122,7 @@ sub _index_by_files {
   my $dist = $self->{DIST};
 
   my %result;
-  my $parser = Parse::PMFile->new($self->{META_CONTENT});
+  my $parser = Parse::PMFile->new($self->{META_CONTENT}, $self);
   for my $pmfile (@$pmfiles) {
     my $pmfile_abs = File::Spec->catfile($self->{DISTROOT}, $pmfile);
     $pmfile_abs =~ s|\\|/|g;
@@ -154,7 +157,6 @@ sub _index_by_meta {
   my $dist = $self->{DIST};
 
   my %result;
-  my $parser = Parse::PMFile->new($self->{META_CONTENT});
   while (my($k,$v) = each %$provides) {
     next if ref $v ne ref {};
     next if !defined $v->{file} or $v->{file} eq '';
@@ -204,7 +206,9 @@ sub _examine_pkg {
       return;
   }
 
-  # Can't do perm_check() here.
+  if ($self->{USERID} && $self->{PERMISSIONS} && !$self->_perm_check($package)) {
+      return;
+  }
 
   # No parser problem should be found
   # (only used for META provides in this module)
@@ -287,6 +291,7 @@ sub _filter_pms {
 
 sub _version_from_meta_ok { Parse::PMFile::_version_from_meta_ok(@_) }
 sub _verbose { Parse::PMFile::_verbose(@_) }
+sub _perm_check { Parse::PMFile::_perm_check(@_) }
 
 # instead of ExtUtils::Manifest::manifind()
 # which only looks for files under the current directory.
@@ -385,13 +390,12 @@ Parse::LocalDistribution - parses local .pm files as PAUSE does
 
     use Parse::LocalDistribution;
 
-    local $Parse::PMFile::ALLOW_DEV_VERSION = 1;
-    my $parser = Parse::LocalDistribution->new;
+    my $parser = Parse::LocalDistribution->new({ALLOW_DEV_VERSION => 1});
     my $provides = $parser->parse('.');
 
 =head1 DESCRIPTION
 
-This is a sister module of L<Parse::PMFile>. This module parses local .pm files (and a META file if any) in a specific (current if not specified) directory, and returns a hash reference that represents "provides" information (with some extra meta data). This is almost the same as L<Module::Metadata> does (which has been in Perl core since Perl 5.13.9). The main difference is the most of the code of this module is directly taken from the PAUSE code as of June 2013. If you need better compatibility to PAUSE, try this. If you need better performance, safety, or portability in general, L<Module::Metadata> may be a better and handier option (L<Parse::PMFile> (and thus L<Parse::LocalDistribution>) forks internally and actually evaluates code in the $VERSION line (in a Safe compartment), both of which may be problematic in some cases).
+This is a sister module of L<Parse::PMFile>. This module parses local .pm files (and a META file if any) in a specific (current if not specified) directory, and returns a hash reference that represents "provides" information (with some extra meta data). This is almost the same as L<Module::Metadata> does (which has been in Perl core since Perl 5.13.9). The main difference is the most of the code of this module is directly taken from the PAUSE code as of June 2013. If you need better compatibility to PAUSE, try this. If you need better performance, safety, or portability in general, L<Module::Metadata> may be a better and handier option (L<Parse::PMFile> (and thus L<Parse::LocalDistribution>) actually evaluates code in the $VERSION line (in a Safe compartment), which may be problematic in some cases).
 
 This module doesn't provide a feature to extract a distribution. If you are too lazy to implement it, L<CPAN::ParseDistribution> may be another good option.
 
@@ -399,7 +403,27 @@ This module doesn't provide a feature to extract a distribution. If you are too 
 
 =head2 new
 
-creates an object.
+creates an object. You can pass an optional path and/or an optional hashref to configure. Options are:
+
+=over 4
+
+=item ALLOW_DEV_VERSION
+
+Parse::LocalDistribution (actually L<Parse::PMFile>) usually ignores a version with an underscore as PAUSE does (because it's for a developer release, and should not be indexed). Set this option to true if you happen to need to keep such a version for better analysis.
+
+=item VERBOSE
+
+Set this to true if you need to know some details.
+
+=item FORK
+
+If you really need to let Parse::PMFile fork while parsing a version (as PAUSE does), set this to true.
+
+=item USERID, PERMISSIONS
+
+Parse::LocalDistribution checks permissions of a package if both USERID and PERMISSIONS (which should be an instance of L<PAUSE::Permissions>) are provided. Unauthorized packages are removed.
+
+=back
 
 =head2 parse
 

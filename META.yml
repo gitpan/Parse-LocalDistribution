@@ -6,7 +6,7 @@ build_requires:
   ExtUtils::MakeMaker: '0'
   File::Path: '0'
   File::Temp: '0'
-  Test::More: '0.47'
+  Test::More: '0.88'
   Test::UseAllModules: '0.10'
 configure_requires:
   ExtUtils::MakeMaker::CPANfile: '0.06'
@@ -26,7 +26,7 @@ requires:
   File::Spec: '0'
   List::Util: '0'
   Parse::CPAN::Meta: '0'
-  Parse::PMFile: '0.19'
+  Parse::PMFile: '0.21'
 resources:
   repository: https://github.com/charsbar/Parse-LocalDistribution
-version: '0.13'
+version: '0.14'
